@@ -202,3 +202,6 @@ fieldset {
   object-fit: cover;
 }
 
+.control-button {
+  margin-right: 389px;
+}

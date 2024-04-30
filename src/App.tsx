@@ -2,6 +2,9 @@ import React, { useState, FormEvent, useEffect } from "react";
 import "./App.css";
 import logoImg from "./assets/logo.jpeg";
 
+let currentBreed = '';
+let currentNumOfPictures ='';
+
 function App() {
   const [breed, setBreed] = useState("");
   const [numOfPictures, setNumOfPictures] = useState("");
@@ -10,12 +13,14 @@ function App() {
   const [breedList, setBreedList] = useState([] as string[]);
   const [isValidBreed, setIsValidBreed] = useState(false);
   const [showContent, setShowContent] = useState(false);
+  const [showButton, setShowButton] = useState(false)
+
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log(breed);
-    console.log(numOfPictures);
-
+    currentBreed = breed;
+    currentNumOfPictures = numOfPictures;
+  
     if(isValidBreed) {
       const res = await fetch("http://localhost:8080/search-pictures", {
       method: "POST",
@@ -32,6 +37,7 @@ function App() {
     setShowContent(true)
   };
 
+
   const fetchBreedList = async () => {
     const res = await fetch("http://localhost:8080/search-breeds");
     const data = await res.json();
@@ -42,25 +48,38 @@ function App() {
     fetchBreedList();
   }, []);
   
-  console.log(breedList);
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = event.target;
     setBreed(value);
     setDidEdit(true);
-    // setBreed(event.target.value);
     const isValid = breedList.includes(value);
     setIsValidBreed(isValid);
   };
-  console.log(breedList);
 
   // const breedIsInvalid = breed.trim() === '' && didEdit;
 
   const handleClose = (picture: string) => {
     const newPics = pictures.filter(item =>  item !== picture);
     setPictures(newPics);
+    setShowButton(true);
   }
 
+
+  const handleGenerateMorePictures = async () => {
+    if(pictures.length !== parseInt(currentNumOfPictures, 10)){
+      const eliminatePics = parseInt(currentNumOfPictures, 10) - pictures.length;
+      const requiredPics = parseInt(currentNumOfPictures, 10) - eliminatePics;
+
+      const res = await fetch("http://localhost:8080/search-pictures", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ breed: currentBreed, numOfPictures: requiredPics }),
+    });
+    const data = await res.json();
+    setPictures([...pictures , ...data.images]);
+  }
+}
 
   return (
     <div>
@@ -115,6 +134,14 @@ function App() {
             ))}
           </div>
         </div>
+      )}
+      {showButton && (
+        <div className="control-button">
+          <p className="form-actions">
+          <button onClick={handleGenerateMorePictures} className="button">Generate more pics</button>
+        </p>
+        </div>
+        
       )}
     </div>
   );
