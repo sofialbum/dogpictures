@@ -1,9 +1,10 @@
 import React, { useState, FormEvent, useEffect } from "react";
 import "./App.css";
 import logoImg from "./assets/logo.jpeg";
-
-let currentBreed = '';
-let currentNumOfPictures ='';
+import fetchDataFromApi from "./utils/fetchData";
+const BASE_URL = "http://localhost:8080";
+let currentBreed = "";
+let currentNumOfPictures = "";
 
 function App() {
   const [breed, setBreed] = useState("");
@@ -13,41 +14,56 @@ function App() {
   const [breedList, setBreedList] = useState([] as string[]);
   const [isValidBreed, setIsValidBreed] = useState(false);
   const [showContent, setShowContent] = useState(false);
-  const [showButton, setShowButton] = useState(false)
-
+  const [showButton, setShowButton] = useState(false);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     currentBreed = breed;
     currentNumOfPictures = numOfPictures;
-  
-    if(isValidBreed) {
-      const res = await fetch("http://localhost:8080/search-pictures", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ breed, numOfPictures }),
-    });
-    const data = await res.json();
-    setPictures(data.images);
-    setBreed("");
-    setNumOfPictures("");
+
+    if (isValidBreed) {
+      const requestData = { breed, numOfPictures };
+      const url = `${BASE_URL}/search-pictures`;
+      
+      const data = await fetchDataFromApi({
+        url,
+        method: "POST",
+        body: requestData,
+      });
+      setPictures(data.images);
+      setBreed("");
+      setNumOfPictures("");
     } else {
       console.error("Invalid breed");
     }
-    setShowContent(true)
+    setShowContent(true);
+
+    // if(isValidBreed) {
+    //   const res = await fetch("http://localhost:8080/search-pictures", {
+    //   method: "POST",
+    //   headers: { "Content-Type": "application/json" },
+    //   body: JSON.stringify({ breed, numOfPictures }),
+    // });
+    // const data = await res.json();
+    // setPictures(data.images);
+    // setBreed("");
+    // setNumOfPictures("");
+    // } else {
+    //   console.error("Invalid breed");
+    // }
+    // setShowContent(true)
   };
 
-
   const fetchBreedList = async () => {
-    const res = await fetch("http://localhost:8080/search-breeds");
-    const data = await res.json();
+    const url = `${BASE_URL}/search-breeds`;
+
+    const data = await fetchDataFromApi({url, method: 'GET'});
     setBreedList(data.breeds);
   };
 
   useEffect(() => {
     fetchBreedList();
   }, []);
-  
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = event.target;
@@ -60,26 +76,32 @@ function App() {
   // const breedIsInvalid = breed.trim() === '' && didEdit;
 
   const handleClose = (picture: string) => {
-    const newPics = pictures.filter(item =>  item !== picture);
+    const newPics = pictures.filter((item) => item !== picture);
     setPictures(newPics);
     setShowButton(true);
-  }
-
+  };
 
   const handleGenerateMorePictures = async () => {
-    if(pictures.length !== parseInt(currentNumOfPictures, 10)){
-      const eliminatePics = parseInt(currentNumOfPictures, 10) - pictures.length;
+    if (pictures.length !== parseInt(currentNumOfPictures, 10)) {
+      const eliminatePics =
+        parseInt(currentNumOfPictures, 10) - pictures.length;
       const requiredPics = parseInt(currentNumOfPictures, 10) - eliminatePics;
 
-      const res = await fetch("http://localhost:8080/search-pictures", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ breed: currentBreed, numOfPictures: requiredPics }),
-    });
-    const data = await res.json();
-    setPictures([...pictures , ...data.images]);
-  }
-}
+      const url = `${BASE_URL}/search-pictures`;
+      const requestData = {
+        breed: currentBreed,
+        numOfPictures: requiredPics,
+      };
+
+      const data = await fetchDataFromApi({
+        url,
+        method: "POST",
+        body: requestData,
+      });
+
+      setPictures([...pictures, ...data.images]);
+    }
+  };
 
   return (
     <div>
@@ -125,10 +147,12 @@ function App() {
       {showContent && (
         <div className="gallery">
           <h2>Gallery</h2>
-          <div className='gallery-container'>
+          <div className="gallery-container">
             {pictures.map((picture, index) => (
               <div className="tocloseimage">
-                <span className="close" onClick={() => handleClose(picture)} >&times;</span>
+                <span className="close" onClick={() => handleClose(picture)}>
+                  &times;
+                </span>
                 <img key={index} src={picture} alt="dog" className="image" />
               </div>
             ))}
@@ -138,10 +162,11 @@ function App() {
       {showButton && (
         <div className="control-button">
           <p className="form-actions">
-          <button onClick={handleGenerateMorePictures} className="button">Generate more pics</button>
-        </p>
+            <button onClick={handleGenerateMorePictures} className="button">
+              Generate more pics
+            </button>
+          </p>
         </div>
-        
       )}
     </div>
   );
