@@ -24,7 +24,7 @@ function App() {
     if (isValidBreed) {
       const requestData = { breed, numOfPictures };
       const url = `${BASE_URL}/search-pictures`;
-      
+
       const data = await fetchDataFromApi({
         url,
         method: "POST",
@@ -57,7 +57,7 @@ function App() {
   const fetchBreedList = async () => {
     const url = `${BASE_URL}/search-breeds`;
 
-    const data = await fetchDataFromApi({url, method: 'GET'});
+    const data = await fetchDataFromApi({ url, method: "GET" });
     setBreedList(data.breeds);
   };
 
@@ -70,6 +70,12 @@ function App() {
     setBreed(value);
     setDidEdit(true);
     const isValid = breedList.includes(value);
+    setIsValidBreed(isValid);
+  };
+
+  const onSearch = (searchTerm: string) => {
+    setBreed(searchTerm);
+    const isValid = breedList.includes(searchTerm);
     setIsValidBreed(isValid);
   };
 
@@ -123,6 +129,17 @@ function App() {
               onChange={handleInputChange}
               required
             />
+            <div className="dropdown">
+              {breedList
+                .filter((item) => {
+                  return breed && item.startsWith(breed) && item !== breed;
+                })
+                .map((item) => (
+                  <div onClick={() => onSearch(item)} className="dropdown-row">
+                    {item}
+                  </div>
+                ))}
+            </div>
             <div className="control-error">
               {didEdit && !isValidBreed && <p>Please enter a valid breed.</p>}
             </div>

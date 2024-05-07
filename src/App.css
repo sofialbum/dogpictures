@@ -205,3 +205,20 @@ fieldset {
 .control-button {
   margin-right: 389px;
 }
+
+.dropdown {
+  background-color: #869999;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #758a8a;
+}
+
+.dropdown:empty {
+  border: none;
+}
+
+.dropdown-row {
+  cursor: pointer;
+  text-align: start;
+  margin: 2px 0;
+}
